@@ -239,4 +239,56 @@ class App:
             messagebox.showerror('Error', 'Select a file first')
             return
         out = self.out_entry.get().strip() or (self.selected_file + '.enc')
-        self._run_ba
+        self._run_background(lambda: self._do_encrypt(out))
+
+    def _decrypt(self):
+        if not self.selected_file:
+            messagebox.showerror('Error', 'Select a file first')
+            return
+        out = self.out_entry.get().strip() or (self.selected_file + '.dec')
+        self._run_background(lambda: self._do_decrypt(out))
+
+    def _show_hash(self):
+        if not self.selected_file:
+            messagebox.showerror('Error', 'Select a file first')
+            return
+        self._run_background(self._do_hash)
+
+    def _do_encrypt(self, out):
+        try:
+            key = self._derive_key()
+            crypto.encrypt_file(self.selected_file, out, key)
+            self.status.config(text=f'Encrypted to {out}')
+            messagebox.showinfo('Success', f'File encrypted to {out}')
+        except Exception as e:
+            self.status.config(text='Encryption failed')
+            messagebox.showerror('Error', str(e))
+
+    def _do_decrypt(self, out):
+        try:
+            key = self._derive_key()
+            crypto.decrypt_file(self.selected_file, out, key)
+            self.status.config(text=f'Decrypted to {out}')
+            messagebox.showinfo('Success', f'File decrypted to {out}')
+        except Exception as e:
+            self.status.config(text='Decryption failed')
+            messagebox.showerror('Error', str(e))
+
+    def _do_hash(self):
+        try:
+            h = integrity.file_sha256(self.selected_file)
+            self.status.config(text=f'SHA256: {h}')
+            messagebox.showinfo('File Hash', f'SHA256:\n{h}')
+        except Exception as e:
+            self.status.config(text='Hash failed')
+            messagebox.showerror('Error', str(e))
+
+    def _run_background(self, func):
+        self.status.config(text='Processing...')
+        threading.Thread(target=func, daemon=True).start()
+
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    app = App(root)
+    root.mainloop()
