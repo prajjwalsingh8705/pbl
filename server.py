@@ -9,6 +9,7 @@ import os
 import json
 import base64
 import hashlib
+import hmac
 from typing import Optional
 from werkzeug.utils import secure_filename
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -16,7 +17,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import secrets
 
-app = Flask(__name__, static_folder='static', static_url_path='')
+app = Flask(__name__, static_folder='.', static_url_path='')
 app.secret_key = secrets.token_hex(32)
 CORS(app)
 
@@ -64,7 +65,7 @@ def verify_user(username: str, password: str) -> bool:
     salt = base64.b64decode(users[username]['salt'])
     expected = base64.b64decode(users[username]['pwd_hash'])
     pwd_hash = _pbkdf2_hash(password, salt)
-    return hashlib.compare_digest(pwd_hash, expected)
+    return hmac.compare_digest(pwd_hash, expected)
 
 def get_user_salt(username: str) -> Optional[bytes]:
     users = _load_users()
@@ -312,4 +313,4 @@ def api_status():
         return jsonify({'logged_in': False})
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5002)
