@@ -9,6 +9,7 @@ import os
 import json
 import base64
 import hashlib
+import hmac
 from typing import Optional
 
 USERS_FILE = 'users.json'
@@ -46,7 +47,7 @@ def verify_user(username: str, password: str) -> bool:
     salt = base64.b64decode(users[username]['salt'])
     expected = base64.b64decode(users[username]['pwd_hash'])
     pwd_hash = _pbkdf2_hash(password, salt)
-    return hashlib.compare_digest(pwd_hash, expected)
+    return hmac.compare_digest(pwd_hash, expected)
 
 def get_user_salt(username: str) -> Optional[bytes]:
     users = _load_users()
